@@ -5,8 +5,8 @@
 
 (function main(round) {
 
-    var gameSpeed = 80;
-    var gameWidth = 60;
+    var gameSpeed = 60;
+    var gameWidth = 50;
     var gameRounds = 5;
 
     var playerPos = 1;
@@ -20,7 +20,7 @@
     var end = 0;
 
     var charHit = 'X';
-    var braille = ' ⠉⠒⠛⠤⠭⠶x⣀⣉⣒x⣤'.split('');
+    var braille = ' ⠉⠒⠛⠤⠭⠶x⣀⣉⣒x⣤'.split('');
 
     document.onkeydown = function(event) {
         if (end) {
@@ -81,11 +81,11 @@
                 message = 'LEVEL UP!';
                 round++;
                 setTimeout(function() {
-                    gameSpeed -= 15;
-                    gameWidth -= 8;
+                    gameSpeed -= 10;
+                    gameWidth -= 7;
                     playerBullets = blank();
                     cpuBullets = blank();
-                    loop()
+                    loop();
                 }, 1500);
             }
         }
