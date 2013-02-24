@@ -1,3 +1,3 @@
-# #00t
+# BrailleWar
 
-A shooter that takes place in your browser's address bar.
+A shooter for the visually impaired that takes place in your browser's address bar.

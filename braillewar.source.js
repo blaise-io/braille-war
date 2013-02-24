@@ -90,7 +90,7 @@
             }
         }
 
-        string = '# ROUND ' + round + '/' + gameRounds + ' [' + player + ':';
+        string = '#  ROUND ' + round + '/' + gameRounds + '  [' + player + ':';
 
         for (var i = 0; ++i < gameWidth;) {
             var playerBullet = brailleBullet(i, playerBullets),
@@ -112,7 +112,7 @@
         }
 
         // CPU
-        string += ':' + cpu + ']  ' + message;
+        string += ':' + cpu + ']   ' + message;
 
         // Show
         top.location.replace(string);
