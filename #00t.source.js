@@ -39,20 +39,20 @@
         }
     };
 
-    (function TURN() {
-        var string, player, cpu, pauseBeforeContinue, message = '';
+    (function loop() {
+        var string, player, cpu, preventImmediateContinue, message = '';
 
-        pauseBeforeContinue = function() {
+        preventImmediateContinue = function() {
             setTimeout(function() {
                 end = 1;
-            }, 1000);
+            }, 1500);
         };
 
         if (round) {
-            CPUMOVE();
+            cpuMove();
         } else {
             message = '↑ ↓ →';
-            setTimeout(TURN, gameSpeed);
+            setTimeout(loop, gameSpeed);
         }
 
         // Move player bullets
@@ -67,7 +67,7 @@
         if (cpuBullets[0] == playerPos) {
             player = charHit;
             message = 'YOU DIED!';
-            pauseBeforeContinue();
+            preventImmediateContinue();
         }
 
         // CPU
@@ -75,8 +75,8 @@
         if (playerBullets[gameWidth - 1] == playerPos) {
             cpu = charHit;
             if (round == gameRounds) {
-                message = 'YOU WON! TNX 4 PLAYING!';
-                pauseBeforeContinue();
+                message = 'YOU WON!! TNX 4 PLAYING!';
+                preventImmediateContinue();
             } else {
                 message = 'LEVEL UP!';
                 round++;
@@ -85,8 +85,8 @@
                     gameWidth -= 8;
                     playerBullets = blank();
                     cpuBullets = blank();
-                    TURN()
-                }, 2000);
+                    loop()
+                }, 1500);
             }
         }
 
@@ -118,11 +118,11 @@
         top.location.replace(string);
 
         if (!message) {
-            setTimeout(TURN, gameSpeed);
+            setTimeout(loop, gameSpeed);
         }
     })();
 
-    function CPUMOVE() {
+    function cpuMove() {
 
         // When user is spamming in same lane, spam back
         var matches, bullets, spamTreshold, spamFactor,
