@@ -17,6 +17,10 @@ var main = function(round) {
 
     var end = 0;
 
+    var charHit = 'X';
+    var texts = ';ARROW KEYS;YOU DIED;YOU WON;NXT RND ;# RND '.split(';');
+    var braille = '⠀⠉⠒⠛⠤⠭⠶X⣀⣉⣒X⣤'.split('');
+
     var blank = function() {
         return new Array(gameWidth);
     };
@@ -25,16 +29,13 @@ var main = function(round) {
         return add[i] ? Math.pow(2, add[i] - 1) : 0;
     };
 
-    var playerbraille = function(pos) {
-        return braille[Math.pow(2, pos - 1)];
+    var playerbraille = function(i) {
+        return braille[Math.pow(2, i - 1)];
     };
 
     var playerBullets = blank();
     var cpuBullets = blank();
 
-    var charHit = 'X';
-    var texts = ';USE ARROW KEYS;YOU DIED;YOU WON;NXT RND ;# RND '.split(';');
-    var braille = '⠀⠉⠒⠛⠤⠭⠶X⣀⣉⣒X⣤'.split('');
 
     document.onkeydown = function(event) {
         var w = event.which;
@@ -46,9 +47,9 @@ var main = function(round) {
         }
 
         if (w == 38) {
-            playerPos = Math.max(1, --playerPos);
+            playerPos = Math.max(1, playerPos - 1);
         } else if (w == 40) {
-            playerPos = Math.min(4, ++playerPos);
+            playerPos = Math.min(4, playerPos + 1);
         } else if (w == 32 || w == 39) {
             playerBullets[0] = playerPos;
         }
@@ -66,7 +67,7 @@ var main = function(round) {
 
         // Move player bullets
         playerBullets.unshift(0);
-        playerBullets.splice(gameWidth, gameWidth);
+        playerBullets.splice(gameWidth, 1);
 
         // Move CPU bullets after collission check, or bullets will not always collide
         cpuBullets.shift();
@@ -99,20 +100,23 @@ var main = function(round) {
             }
         }
 
-        string = message[5] + round + '/' + gameRounds + ' [' + player + ':';
+        string = texts[5] + round + '/' + gameRounds + ' [' + player + ':';
 
         for (var i = 0; ++i < gameWidth;) {
             var playerBullet = brailleBullet(i, playerBullets),
                 cpuBullet = brailleBullet(i, cpuBullets);
 
-            if (playerBullet && playerBullets[i] == cpuBullets[i]) {
-                playerBullets[i] = cpuBullets[i] = 0;
-                string += charHit;
-            }
+            if (playerBullet) {
 
-            else if (playerBullet && playerBullets[i] == cpuBullets[i - 1]) {
-                playerBullets[i] = cpuBullets[i - 1] = 0;
-                string += charHit;
+                if (playerBullets[i] == cpuBullets[i]) {
+                    playerBullets[i] = cpuBullets[i] = 0;
+                    string += charHit;
+                }
+
+                else if (playerBullets[i] == cpuBullets[i - 1]) {
+                    playerBullets[i] = cpuBullets[i - 1] = 0;
+                    string += charHit;
+                }
             }
 
             else {
@@ -141,27 +145,25 @@ var main = function(round) {
     var cpuMove = function() {
 
         // When user is spamming in same lane, spam back
-        var matches, bullets, spamTreshold, spamFactor,
+        var matches, spamFactor,
             randomChance = Math.random(),
             randomVariance = Math.random(),
             join = playerBullets.join('');
 
-        bullets = join.match(/[^0]/g);
-        spamTreshold = gameWidth / 4;
-        spamFactor = (bullets && bullets.length / gameWidth) || 0.001;
+        spamFactor = (join.replace(/0/g, '').length || 0.05) / gameWidth;
 
-        matches = join.match(new RegExp(cpuPos, 'g'));
-        if (matches && matches.length > spamTreshold) {
-            cpuKeepShooting = spamTreshold;
+        matches = join.match(new RegExp(cpuPos, 'g')) || [];
+        if (matches.length > gameWidth / 4) {
+            cpuKeepShooting = gameWidth / 4;
         }
 
         // Bullets are close-by in same lane, defensive shooting
         else if (cpuPos in playerBullets.slice(gameWidth * 0.8)) {
-            cpuKeepShooting = spamTreshold * 0.2;
+            cpuKeepShooting = gameWidth / 10;
         }
 
         // Shoot in current lane
-        if (cpuKeepShooting > 0 || randomChance < spamFactor) {
+        if (cpuKeepShooting + randomChance < spamFactor) {
             cpuKeepShooting--;
             if (cpuKeepShooting && randomVariance < 0.8) { // Hickup
                 return cpuBullets[gameWidth] = cpuPos; // Shoot
@@ -169,18 +171,18 @@ var main = function(round) {
         }
 
         // Move to player lane and shoot a couple of times
-        if (cpuHunting || (randomChance < spamFactor + 0.1)) {
+        else if (randomChance < cpuHunting + spamFactor + 0.1) {
             cpuHunting = 1;
             if (cpuPos == playerPos) {
                 cpuHunting = 0;
-                return cpuKeepShooting = randomVariance * spamFactor * 70;
+                cpuKeepShooting = randomVariance * spamFactor * 70;
             } else {
-                return cpuPos += (cpuPos > playerPos) ? -1 : 1;
+                cpuPos += (cpuPos > playerPos) ? -1 : 1;
             }
         }
 
         // Move around randomly
-        if (randomChance < spamFactor + 0.12) {
+        else if (randomChance < spamFactor + 0.12) {
             cpuPos = Math.min(Math.max(cpuPos + randomChance > .5 ? 1 : -1, 1), 4);
             cpuKeepShooting = randomVariance * 3 * round;
         }
