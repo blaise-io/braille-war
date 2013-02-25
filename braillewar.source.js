@@ -3,55 +3,64 @@
 // http://marijnhaverbeke.nl/uglifyjs (allow non-ascii)
 // http://www.iteral.com/jscrush/
 
-(function main(round) {
+var main = function(round) {
 
     var gameSpeed = 60;
     var gameWidth = 50;
     var gameRounds = 5;
 
     var playerPos = 1;
-    var playerBullets = blank();
 
     var cpuPos = 1;
     var cpuKeepShooting = 0;
     var cpuHunting = 0;
-    var cpuBullets = blank();
 
     var end = 0;
 
+    var blank = function() {
+        return new Array(gameWidth);
+    };
+
+    var brailleBullet = function(i, add) {
+        return add[i] ? Math.pow(2, add[i] - 1) : 0;
+    };
+
+    var playerbraille = function(pos) {
+        return braille[Math.pow(2, pos - 1)];
+    };
+
+    var playerBullets = blank();
+    var cpuBullets = blank();
+
     var charHit = 'X';
-    var braille = ' ⠉⠒⠛⠤⠭⠶x⣀⣉⣒x⣤'.split('');
+    var texts = ';USE ARROW KEYS;YOU DIED;YOU WON;NXT RND ;# RND '.split(';');
+    var braille = '⠀⠉⠒⠛⠤⠭⠶X⣀⣉⣒X⣤'.split('');
 
     document.onkeydown = function(event) {
+        var w = event.which;
+
         if (end) {
             main(1);
         } else {
             round = round || 1;
         }
-        switch (event.which) {
-            case 38:
-                return playerPos = Math.max(1, --playerPos);
-            case 40:
-                return playerPos = Math.min(4, ++playerPos);
-            case 32:
-            case 39:
-                return playerBullets[0] = playerPos;
+
+        if (w == 38) {
+            playerPos = Math.max(1, --playerPos);
+        } else if (w == 40) {
+            playerPos = Math.min(4, ++playerPos);
+        } else if (w == 32 || w == 39) {
+            playerBullets[0] = playerPos;
         }
     };
 
-    (function loop() {
-        var string, player, cpu, preventImmediateContinue, message = '';
-
-        preventImmediateContinue = function() {
-            setTimeout(function() {
-                end = 1;
-            }, 1500);
-        };
+    var loop = function() {
+        var string, player, cpu, message = 0;
 
         if (round) {
             cpuMove();
         } else {
-            message = '↑ ↓ →';
+            message = 1;
             setTimeout(loop, gameSpeed);
         }
 
@@ -66,8 +75,8 @@
         player = playerbraille(playerPos);
         if (cpuBullets[0] == playerPos) {
             player = charHit;
-            message = 'YOU DIED!';
-            preventImmediateContinue();
+            message = 2;
+            // TODO PREVENT IMMEDIATE
         }
 
         // CPU
@@ -75,10 +84,10 @@
         if (playerBullets[gameWidth - 1] == playerPos) {
             cpu = charHit;
             if (round == gameRounds) {
-                message = 'YOU WON!! TNX 4 PLAYING!';
-                preventImmediateContinue();
+                message = 3;
+                // TODO PREVENT IMMEDIATE
             } else {
-                message = 'LEVEL UP!';
+                message = 4;
                 round++;
                 setTimeout(function() {
                     gameSpeed -= 10;
@@ -86,11 +95,11 @@
                     playerBullets = blank();
                     cpuBullets = blank();
                     loop();
-                }, 1500);
+                }, 2000);
             }
         }
 
-        string = '#  ROUND ' + round + '/' + gameRounds + '  [' + player + ':';
+        string = message[5] + round + '/' + gameRounds + ' [' + player + ':';
 
         for (var i = 0; ++i < gameWidth;) {
             var playerBullet = brailleBullet(i, playerBullets),
@@ -112,17 +121,24 @@
         }
 
         // CPU
-        string += ':' + cpu + ']   ' + message;
+        string += ':' + cpu + '] ' + texts[message];
+
+        // Prevent %20 showing in Safari
+        string = string.replace(/ /g, braille[0]);
 
         // Show
-        top.location.replace(string);
+        if (top.history.pushState) {
+            top.history.pushState('', '', string);
+        } else {
+            top.location.replace(string);
+        }
 
         if (!message) {
             setTimeout(loop, gameSpeed);
         }
-    })();
+    };
 
-    function cpuMove() {
+    var cpuMove = function() {
 
         // When user is spamming in same lane, spam back
         var matches, bullets, spamTreshold, spamFactor,
@@ -139,8 +155,8 @@
             cpuKeepShooting = spamTreshold;
         }
 
-        // Bullet are close-by, defensive shooting
-        else if (playerBullets.lastIndexOf(cpuPos) > gameWidth * 0.8) {
+        // Bullets are close-by in same lane, defensive shooting
+        else if (cpuPos in playerBullets.slice(gameWidth * 0.8)) {
             cpuKeepShooting = spamTreshold * 0.2;
         }
 
@@ -168,18 +184,10 @@
             cpuPos = Math.min(Math.max(cpuPos + randomChance > .5 ? 1 : -1, 1), 4);
             cpuKeepShooting = randomVariance * 3 * round;
         }
-    }
+    };
 
-    function blank() {
-        return new Array(gameWidth);
-    }
+    loop();
 
-    function brailleBullet(i, add) {
-        return add[i] ? Math.pow(2, add[i] - 1) : 0;
-    }
+};
 
-    function playerbraille(pos) {
-        return braille[Math.pow(2, pos - 1)];
-    }
-
-})(0);
+main(0);
