@@ -7,4 +7,4 @@ My entry for JS1k 2013 Spring; [awarded an honorable mention](https://gist.githu
  * [**PLAY HERE!**](http://js1k.com/2013-spring/demo/1377)
  * Use arrow keys. Up=Up, Down=Down, Space/Right = Shoot.  
  * Click the empty lower frame if keys don't work. 
- * Shoot the thing on the right.
+ * Shoot the thing on the right and don't get shot.
